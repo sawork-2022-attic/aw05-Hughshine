@@ -5,7 +5,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
+//import springfox.documentation.annotations.Cacheable;
 
 import java.io.IOException;
 import java.net.URL;
@@ -17,6 +19,7 @@ public class JDRepository implements ProductRepository {
     private List<Product> products = null;
 
     @Override
+    @Cacheable(value = "products", unless = "#result == null")
     public List<Product> allProducts() {
         try {
             if (products == null)
@@ -51,7 +54,8 @@ public class JDRepository implements ProductRepository {
             String title = el.getElementsByClass("p-name").eq(0).text();
             if (title.indexOf("，") >= 0)
                 title = title.substring(0, title.indexOf("，"));
-
+            if (id == null || id.equals(""))
+                continue;
             Product product = new Product(id, title, Double.parseDouble(price), img);
             list.add(product);
         }
