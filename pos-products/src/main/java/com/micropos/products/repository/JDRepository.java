@@ -5,7 +5,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.stereotype.Repository;
 //import springfox.documentation.annotations.Cacheable;
 
@@ -18,15 +21,21 @@ import java.util.List;
 public class JDRepository implements ProductRepository {
     private List<Product> products = null;
 
+    @Autowired
+    private CircuitBreakerFactory circuitBreakerFactory;
+
     @Override
     @Cacheable(value = "products", unless = "#result == null")
     public List<Product> allProducts() {
-        try {
-            if (products == null)
-                products = parseJD("Java");
-        } catch (IOException e) {
-            products = new ArrayList<>();
-        }
+        CircuitBreaker circuitBreaker = circuitBreakerFactory.create("circuitbreaker");
+        if (products == null)
+            products = circuitBreaker.run(() -> {
+                try {
+                    return parseJD("Java");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }, throwable -> new ArrayList<>());
         return products;
     }
 
