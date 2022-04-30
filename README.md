@@ -13,6 +13,20 @@
    2. modify cart (modify product to count)
 7. circuit breaker for products & cart.
    1. request JD
+   2. cart
+
+## POST `cart/{cartId}` with items not work
+
+一直报这个错误，没有弄清楚原因。感觉是在说，在update cart时，cascading insert cart item时，主键不能为null，但明明Item的id设置成了自增长，应该自行增加.
+
+```
+[Request processing failed; nested exception is org.springframework.dao.DataIntegrityViolationException: could not execute statement; SQL [n/a]; constraint [null]; nested exception is org.hibernate.exception.ConstraintViolationException: could not execute statement] with root cause
+
+org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for column "ITEMS_ID"; SQL statement:
+insert into items (id, cart_id, product_id, product_name, quantity, unit_price) values (default, ?, ?, ?, ?, ?) [23502-200]
+```
+
+其他功能用postman测试了. 理解了 eureka 工作原理（主要管理不向外暴露的内部接口之间的DNS），使用了circuit breaker.（系统级的exception handling，在语言中实现）
 
 # RESTful microPoS
 
