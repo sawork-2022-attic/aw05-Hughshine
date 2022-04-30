@@ -31,13 +31,8 @@ paths:
         - carts
       operationId: createCart
       summary: Create a new cart
-      requestBody:
-        description: An empty cart
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Cart'
-        required: true
+#      requestBody:
+#        required: false
       responses:
         201:
           description: The cart was successfully added.
@@ -47,12 +42,6 @@ paths:
                 $ref: '#/components/schemas/Cart'
         400:
           description: Bad request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        404:
-          description: Cart not found.
           content:
             application/json:
               schema:

@@ -28,6 +28,16 @@ public interface CartMapper {
                 .items(toItemDtos(cart.items()));
     }
 
+    default List<CartDto> toCartDtos(List<Cart> carts) {
+        if (carts == null || carts.isEmpty()) {
+            return null;
+        }
+        List<CartDto> list = new ArrayList<>(carts.size());
+        for (Cart cart : carts) {
+            list.add(toCartDto(cart));
+        }
+        return list;
+    }
 
     default List<CartItemDto> toItemDtos(List<Item> items) {
         if (items == null || items.isEmpty()) {

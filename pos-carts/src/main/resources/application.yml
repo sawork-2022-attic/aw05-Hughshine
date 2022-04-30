@@ -2,7 +2,7 @@ spring:
   application:
     name: pos-carts
 server:
-  port: 0
+  port: 45900
 eureka:
   client:
     serviceUrl:

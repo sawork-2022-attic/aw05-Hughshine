@@ -14,6 +14,7 @@ import java.io.Serializable;
 public class Item implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")
     @Getter
     @Setter
     private Integer id;
@@ -42,4 +43,16 @@ public class Item implements Serializable {
     @Getter
     @Setter
     private int quantity;
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "id=" + id +
+                ", cartId=" + cartId +
+                ", productId='" + productId + '\'' +
+                ", productName='" + productName + '\'' +
+                ", unitPrice=" + unitPrice +
+                ", quantity=" + quantity +
+                '}';
+    }
 }

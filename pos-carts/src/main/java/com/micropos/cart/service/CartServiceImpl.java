@@ -7,16 +7,22 @@ import com.micropos.cart.mapper.CartMapper;
 import com.micropos.cart.model.Cart;
 import com.micropos.cart.model.Item;
 import com.micropos.cart.repository.CartRepository;
+import com.micropos.cart.repository.ItemRepository;
 import com.micropos.dto.CartDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.data.util.Streamable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +30,7 @@ import java.util.Optional;
 public class CartServiceImpl implements CartService {
 
     private CartRepository cartRepository;
+    private ItemRepository itemRepository;
 
     private final String COUNTER_URL = "http://POS-COUNTER/counter/";
 
@@ -37,6 +44,8 @@ public class CartServiceImpl implements CartService {
     @LoadBalanced
     private RestTemplate restTemplate;
 
+    private CircuitBreakerFactory circuitBreakerFactory;
+
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -47,8 +56,20 @@ public class CartServiceImpl implements CartService {
         this.cartRepository = cartRepository;
     }
 
+    @Autowired
+    public void setItemRepository(ItemRepository itemRepository) {
+        this.itemRepository = itemRepository;
+    }
+
+    @Autowired
+    public void setCircuitBreakerFactory(CircuitBreakerFactory circuitBreakerFactory) {
+        this.circuitBreakerFactory = circuitBreakerFactory;
+    }
+
     @Override
     public Double checkout(Cart cart) {
+        CircuitBreaker circuitBreaker = circuitBreakerFactory.create("circuitbreaker");
+
         CartDto cartDto = cartMapper.toCartDto(cart);
         ObjectMapper mapper = new ObjectMapper();
 
@@ -56,16 +77,18 @@ public class CartServiceImpl implements CartService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> request = null;
         try {
+            System.out.println("checkout: " + cartDto);
             request = new HttpEntity<>(mapper.writeValueAsString(cartDto), headers);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        Double total = restTemplate.postForObject(COUNTER_URL+ "/checkout", request, Double.class);
+        HttpEntity<String> finalRequest = request;
+        Double total =
+                circuitBreaker.run(() -> restTemplate.postForObject(COUNTER_URL + "/checkout", finalRequest, Double.class), throwable -> -1.0);
         return total;
     }
 
     public Integer test() {
-
         Integer test = restTemplate.getForObject(COUNTER_URL + "/test", Integer.class);
         return test;
     }
@@ -81,8 +104,15 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Cart add(Cart cart, Item item) {
-        if (cart.addItem(item))
+        System.out.println(cart);
+        System.out.println(item);
+        if (item.id() == null || itemRepository.findById(item.id()).isEmpty()) {
+            item.id(null);
+        }
+        if (cart.addItem(item)) {
+            System.out.println(cart);
             return cartRepository.save(cart);
+        }
         return null;
     }
 
@@ -95,4 +125,11 @@ public class CartServiceImpl implements CartService {
     public Optional<Cart> getCart(Integer cartId) {
         return cartRepository.findById(cartId);
     }
+
+    public Cart createCart() {
+        Cart cart = new Cart();
+        System.out.println(cart);
+        return cartRepository.save(cart);
+    }
+
 }

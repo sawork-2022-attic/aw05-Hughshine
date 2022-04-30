@@ -20,7 +20,7 @@ public class Cart implements Serializable {
     @Setter
     private Integer id;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "items", joinColumns = @JoinColumn(name = "cart_id"))
     @Setter
     @Getter
@@ -34,4 +34,11 @@ public class Cart implements Serializable {
         return items.remove(item);
     }
 
+    @Override
+    public String toString() {
+        return "Cart{" +
+                "id=" + id +
+                ", items=" + items +
+                '}';
+    }
 }
