@@ -1,6 +1,6 @@
 # Structure & Features
 
-1. No gateway (fixed port for pos-product/pos-count)
+1. No gateway (fixed port for pos-product/pos-counter)
 2. `api/`: just openapi config
 3. `discovery/`: eureka server
 4. `products/`: product services 
@@ -15,7 +15,11 @@
    1. request JD
    2. cart
 
-## POST `cart/{cartId}` with items not work
+其他功能借postman进行了测试. 
+1. 理解了 eureka 工作原理。可以理解为，它管理着内部接口之间的DNS.
+2. 学习了如何使用了circuit breaker. 可以将它理解为服务级的exception handling.
+
+## 一个问题：POST `cart/{cartId}` with items 提示 cascading insert 失败
 
 > 在aw07改用JpaRepository回避了这个问题.
 
@@ -28,7 +32,6 @@ org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: NULL not allowed for c
 insert into items (id, cart_id, product_id, product_name, quantity, unit_price) values (default, ?, ?, ?, ?, ?) [23502-200]
 ``` -->
 
-其他功能用postman测试了. 理解了 eureka 工作原理（主要管理不向外暴露的内部接口之间的DNS），使用了circuit breaker.（系统级的exception handling，在语言中实现）
 
 # RESTful microPoS
 
